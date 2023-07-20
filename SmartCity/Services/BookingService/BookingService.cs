@@ -173,14 +173,20 @@ namespace SmartCity.Services.BookingService
             };
         }
 
-        public async Task<Response<List<TblBooking>>> GetBookingsByAccountId(int accId)
+        public async Task<Response<List<ViewBookingModel>>> GetBookingsByAccountId(int accId)
         {
-            var bookings = await _context.TblBookings.Where(x => x.AccountId == accId).ToListAsync();
-            foreach (var booking in bookings)
+            var bookings = await _context.TblBookings.Where(x => x.AccountId == accId).Select(x => new ViewBookingModel()
             {
-                booking.TblBookingDetails = (ICollection<TblBookingDetail>?)_context.TblBookingDetails.FirstOrDefault(x => x.BookingId == booking.BookingId);
-            }
-            return new Response<List<TblBooking>>(bookings);
+                AccountId = x.AccountId,
+                BookingId = x.BookingId,
+                DateOfBooking = x.DateOfBooking,
+                EmpQuantity = x.EmpQuantity,
+                StatusBooking = x.StatusBooking,
+                TotalAmount = x.TotalAmount,
+                TblBookingDetail = _context.TblBookingDetails.FirstOrDefault(y => y.BookingId == x.BookingId)
+            }).ToListAsync();
+
+            return new Response<List<ViewBookingModel>>(bookings);
         }
 
         public async Task<Response<List<TblBooking>>> GetBookingsByEmpId(int empId)
